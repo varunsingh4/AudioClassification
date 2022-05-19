@@ -1,0 +1,237 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled0.ipynb",
+      "provenance": [],
+      "authorship_tag": "ABX9TyPy4cb+rqVzJHMD+TyVgp60",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/varunsingh4/AudioClassification/blob/main/Timeseries%20Data\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "PCpObfXUTGyP"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\n",
+        "from tensorflow.keras.models import Sequential\n",
+        "from tensorflow.keras.layers import LSTM\n",
+        "from tensorflow.keras.layers import Dense\n",
+        "from tensorflow.keras.layers import Flatten"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def prepare_data(time_series_data,n_features):\n",
+        "    X=[]\n",
+        "    y=[]\n",
+        "    for i in range(len(time_series_data)):\n",
+        "        end_indx=i+n_features\n",
+        "        if end_indx > len(time_series_data)-1:\n",
+        "            break\n",
+        "        seq_x,seq_y=time_series_data[i:end_indx],time_series_data[end_indx]\n",
+        "        X.append(seq_x)\n",
+        "        y.append(seq_y)\n",
+        "    return np.array(X),np.array(y)"
+      ],
+      "metadata": {
+        "id": "o7VbrnzOTqHs"
+      },
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "time_series_data=[100,125,133,145,146,187,198,200]\n",
+        "n_steps=3\n",
+        "X,y=prepare_data(time_series_data,n_steps)"
+      ],
+      "metadata": {
+        "id": "IxJoWHpbTwUg"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(X)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ezln_tV7T13m",
+        "outputId": "5fadcb69-0ff1-47ce-b432-16d32c37793a"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[[100 125 133]\n",
+            " [125 133 145]\n",
+            " [133 145 146]\n",
+            " [145 146 187]\n",
+            " [146 187 198]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(y)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "_E78JdKfT5A-",
+        "outputId": "1ffd3c26-cc32-4f6e-a6dd-5b0a98175b61"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[145 146 187 198 200]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "n_features=1\n",
+        "X=X.reshape((X.shape[0],X.shape[1],n_features))"
+      ],
+      "metadata": {
+        "id": "mV9G_Sg9T8Wf"
+      },
+      "execution_count": 6,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model=Sequential()\n",
+        "model.add(LSTM(50,activation='relu',return_sequences=True,input_shape=(n_steps,n_features)))\n",
+        "model.add(LSTM(50,activation='relu'))\n",
+        "model.add(Dense(1))\n",
+        "model.compile(optimizer='adam',loss='mse')\n",
+        "model.fit(X,y,epochs=100,verbose=0)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "zgL-keqrUA8v",
+        "outputId": "9a2b9f29-615f-49b3-e84e-94aca72c2a65"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<keras.callbacks.History at 0x7f35c962be10>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 8
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "i=0\n",
+        "x_input = np.array([187, 196, 210])\n",
+        "temp_input=list(x_input)\n",
+        "lst_output=[]\n",
+        "while(i<10):\n",
+        "  if(len(temp_input)>3):\n",
+        "    x_input=np.array(temp_input[1:])\n",
+        "    print(\"{} day input {}\".format(i,x_input))\n",
+        "    #print(x_input)\n",
+        "    x_input = x_input.reshape((1, n_steps, n_features))\n",
+        "    #print(x_input)\n",
+        "    yhat = model.predict(x_input, verbose=0)\n",
+        "    print(\"{} day output {}\".format(i,yhat))\n",
+        "    temp_input.append(yhat[0][0])\n",
+        "    temp_input=temp_input[1:]\n",
+        "    #print(temp_input)\n",
+        "    lst_output.append(yhat[0][0])\n",
+        "    i=i+1\n",
+        "  else:\n",
+        "      x_input=x_input.reshape((1,n_steps,n_features))\n",
+        "      y_hat=model.predict(x_input)\n",
+        "      temp_input.append(y_hat[0][0])\n",
+        "      lst_output.append(y_hat[0][0])\n",
+        "      i=i+1\n",
+        "\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IztooGUQUPA0",
+        "outputId": "8e9667f2-0b1a-49d3-ad66-6e67997d99e2"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "1 day input [196.         210.         240.29476929]\n",
+            "1 day output [[256.55765]]\n",
+            "2 day input [210.         240.29476929 256.55764771]\n",
+            "2 day output [[279.66202]]\n",
+            "3 day input [240.29477 256.55765 279.66202]\n",
+            "3 day output [[309.14786]]\n",
+            "4 day input [256.55765 279.66202 309.14786]\n",
+            "4 day output [[333.20627]]\n",
+            "5 day input [279.66202 309.14786 333.20627]\n",
+            "5 day output [[363.10855]]\n",
+            "6 day input [309.14786 333.20627 363.10855]\n",
+            "6 day output [[396.16064]]\n",
+            "7 day input [333.20627 363.10855 396.16064]\n",
+            "7 day output [[428.4312]]\n",
+            "8 day input [363.10855 396.16064 428.4312 ]\n",
+            "8 day output [[465.58902]]\n",
+            "9 day input [396.16064 428.4312  465.58902]\n",
+            "9 day output [[505.40457]]\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
